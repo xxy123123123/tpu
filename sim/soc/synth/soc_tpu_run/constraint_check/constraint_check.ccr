@@ -1,0 +1,187 @@
+##### Written on 2026/10/24 00:02:18 ###############################
+
+
+##### INFO ##################################################
+
+Current device : 
+	PG2L200H-6FBB676
+
+Top Module : 
+	board_top
+
+Constraint File(s) : 
+	D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc
+
+##### SUMMARY ######################################################
+
+Found 0 error(s), 21 critical warning(s), 0 warning(s), out of 838 constraint(s)
+
+
+Inapplicable constraints(except overwritten constraints):
+********************************************
+
+define_attribute {p:mem_dq[1]} {PAP_IO_LOC} {J6}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 40)] | Port mem_dq[1] has been placed at location J6, whose type is share pin.
+
+define_attribute {p:mem_dq[3]} {PAP_IO_LOC} {L8}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 64)] | Port mem_dq[3] has been placed at location L8, whose type is share pin.
+
+define_attribute {p:mem_dq[5]} {PAP_IO_LOC} {K7}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 88)] | Port mem_dq[5] has been placed at location K7, whose type is share pin.
+
+define_attribute {p:mem_dq[7]} {PAP_IO_LOC} {J5}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 112)] | Port mem_dq[7] has been placed at location J5, whose type is share pin.
+
+define_attribute {p:mem_dqs[0]} {PAP_IO_LOC} {J4}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 124)] | Port mem_dqs[0] has been placed at location J4, whose type is share pin.
+
+define_attribute {p:mem_dqs_n[0]} {PAP_IO_LOC} {H4}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 134)] | Port mem_dqs_n[0] has been placed at location H4, whose type is share pin.
+
+define_attribute {p:mem_dm[0]} {PAP_IO_LOC} {K6}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 144)] | Port mem_dm[0] has been placed at location K6, whose type is share pin.
+
+define_attribute {p:mem_dq[8]} {PAP_IO_LOC} {H6}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 151)] | Port mem_dq[8] has been placed at location H6, whose type is share pin.
+
+define_attribute {p:mem_dq[10]} {PAP_IO_LOC} {H8}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 175)] | Port mem_dq[10] has been placed at location H8, whose type is share pin.
+
+define_attribute {p:mem_dq[11]} {PAP_IO_LOC} {D6}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 187)] | Port mem_dq[11] has been placed at location D6, whose type is share pin.
+
+define_attribute {p:mem_dq[12]} {PAP_IO_LOC} {G8}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 199)] | Port mem_dq[12] has been placed at location G8, whose type is share pin.
+
+define_attribute {p:mem_dq[13]} {PAP_IO_LOC} {E6}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 211)] | Port mem_dq[13] has been placed at location E6, whose type is share pin.
+
+define_attribute {p:mem_dq[15]} {PAP_IO_LOC} {G6}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 235)] | Port mem_dq[15] has been placed at location G6, whose type is share pin.
+
+define_attribute {p:mem_dqs[1]} {PAP_IO_LOC} {H7}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 247)] | Port mem_dqs[1] has been placed at location H7, whose type is share pin.
+
+define_attribute {p:mem_dqs_n[1]} {PAP_IO_LOC} {G7}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 257)] | Port mem_dqs_n[1] has been placed at location G7, whose type is share pin.
+
+define_attribute {p:camera_data[5]} {PAP_IO_LOC} {M26}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 773)] | Port camera_data[5] has been placed at location M26, whose type is share pin.
+
+define_attribute {p:camera_data[4]} {PAP_IO_LOC} {P26}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 778)] | Port camera_data[4] has been placed at location P26, whose type is share pin.
+
+define_attribute {p:camera_data[2]} {PAP_IO_LOC} {T23}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 788)] | Port camera_data[2] has been placed at location T23, whose type is share pin.
+
+define_attribute {p:camera_data[1]} {PAP_IO_LOC} {R23}
+	C: ConstraintEditor-2002: [D:/riscv/RISCV/constraint_check/temp_constraint_file.fdc(line number: 793)] | Port camera_data[1] has been placed at location R23, whose type is share pin.
+
+
+Constraints with issues:
+********************************************
+
+
+Issues without commands:
+********************************************
+
+C: ConstraintEditor-2009: p:led_clk_alive is lack of PAP_IO_SLEW, OUTPUT or INOUT PORT had better set PAP_IO_SLEW, the optional value is {SLOW, FAST}.
+C: ConstraintEditor-2009: p:uart_tx is lack of PAP_IO_SLEW, OUTPUT or INOUT PORT had better set PAP_IO_SLEW, the optional value is {SLOW, FAST}.
+
+Unconstrained ports:
+********************************************
+
+
+Constraints with matching wildcard expressions:
+********************************************
+
+set_false_path -to [get_pins {u_soc.g_camera.u_camera.wr_reset_pipe*/C}]
+	I: The pattern 'u_soc.g_camera.u_camera.wr_reset_pipe*/C' in command 'get_pins u_soc.g_camera.u_camera.wr_reset_pipe*/C' match 1 objects below:
+	I: pin u_soc/g_camera.u_camera/wr_reset_pipe[1:0]/C
+
+set_input_delay -clock [get_clocks {camera_pclk}] -clock_fall -max 3.000 [get_ports {camera_data* camera_href camera_vsync}]
+	I: The pattern 'camera_data*' in command 'get_ports {camera_data* camera_href camera_vsync}' match 8 objects below:
+	I: port camera_data[0]
+	I: port camera_data[1]
+	I: port camera_data[2]
+	I: port camera_data[3]
+	I: port camera_data[4]
+	I: port camera_data[5]
+	I: port camera_data[6]
+	I: port camera_data[7]
+
+set_input_delay -clock [get_clocks {camera_pclk}] -clock_fall -min 0.000 [get_ports {camera_data* camera_href camera_vsync}]
+	I: The pattern 'camera_data*' in command 'get_ports {camera_data* camera_href camera_vsync}' match 8 objects below:
+	I: port camera_data[0]
+	I: port camera_data[1]
+	I: port camera_data[2]
+	I: port camera_data[3]
+	I: port camera_data[4]
+	I: port camera_data[5]
+	I: port camera_data[6]
+	I: port camera_data[7]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.dual_mode u_soc.g_camera.u_camera.stream_warmed}] -to [get_cells {u_soc.g_camera.u_camera.u_capture.skip_warmup_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_capture.skip_warmup_sync*' in command 'get_cells u_soc.g_camera.u_camera.u_capture.skip_warmup_sync*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_capture/skip_warmup_sync[1:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.run}] -to [get_cells {u_soc.g_camera.u_camera.u_capture.run_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_capture.run_sync*' in command 'get_cells u_soc.g_camera.u_camera.u_capture.run_sync*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_capture/run_sync[1:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_capture.crc*}] -to [get_cells {u_soc.g_camera.u_camera.frame_crc32* u_soc.g_camera.u_camera.buffer_crc*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_capture.crc*' in command 'get_cells u_soc.g_camera.u_camera.u_capture.crc*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_capture/crc[31:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_capture.crc*}] -to [get_cells {u_soc.g_camera.u_camera.frame_crc32* u_soc.g_camera.u_camera.buffer_crc*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.frame_crc32*' in command 'get_cells {u_soc.g_camera.u_camera.frame_crc32* u_soc.g_camera.u_camera.buffer_crc*}' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/frame_crc32[31:0]
+	I: The pattern 'u_soc.g_camera.u_camera.buffer_crc*' in command 'get_cells {u_soc.g_camera.u_camera.frame_crc32* u_soc.g_camera.u_camera.buffer_crc*}' match 2 objects below:
+	I: instance u_soc/g_camera.u_camera/buffer_crc[0][31:0]
+	I: instance u_soc/g_camera.u_camera/buffer_crc[1][31:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_capture.done}] -to [get_cells {u_soc.g_camera.u_camera.done_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.done_sync*' in command 'get_cells u_soc.g_camera.u_camera.done_sync*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/done_sync[1:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_capture.format_error}] -to [get_cells {u_soc.g_camera.u_camera.format_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.format_sync*' in command 'get_cells u_soc.g_camera.u_camera.format_sync*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/format_sync[1:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_capture.overflow}] -to [get_cells {u_soc.g_camera.u_camera.overflow_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.overflow_sync*' in command 'get_cells u_soc.g_camera.u_camera.overflow_sync*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/overflow_sync[1:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.rptr*}] -to [get_cells {u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.wrptr1*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.rptr*' in command 'get_cells u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.rptr*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_fifo/U_ipm2l_fifo_afifo_16i_64o_512/U_ipm2l_fifo_ctrl/ASYN_CTRL.rptr[8:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.rptr*}] -to [get_cells {u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.wrptr1*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.wrptr1*' in command 'get_cells u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.wrptr1*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_fifo/U_ipm2l_fifo_afifo_16i_64o_512/U_ipm2l_fifo_ctrl/ASYN_CTRL.wrptr1[8:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.wptr*}] -to [get_cells {u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.rwptr1*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.wptr*' in command 'get_cells u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.wptr*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_fifo/U_ipm2l_fifo_afifo_16i_64o_512/U_ipm2l_fifo_ctrl/ASYN_CTRL.wptr[12:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.wptr*}] -to [get_cells {u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.rwptr1*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.rwptr1*' in command 'get_cells u_soc.g_camera.u_camera.u_fifo.U_ipm2l_fifo_afifo_16i_64o_512.U_ipm2l_fifo_ctrl.ASYN_CTRL.rwptr1*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_fifo/U_ipm2l_fifo_afifo_16i_64o_512/U_ipm2l_fifo_ctrl/ASYN_CTRL.rwptr1[12:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.wr_reset_pipe*}] -to [get_cells {u_soc.g_camera.u_camera.ready_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.wr_reset_pipe*' in command 'get_cells u_soc.g_camera.u_camera.wr_reset_pipe*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/wr_reset_pipe[1:0]
+
+set_max_delay -datapath_only -from [get_cells {u_soc.g_camera.u_camera.wr_reset_pipe*}] -to [get_cells {u_soc.g_camera.u_camera.ready_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.ready_sync*' in command 'get_cells u_soc.g_camera.u_camera.ready_sync*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/ready_sync[1:0]
+
+set_max_delay -datapath_only -from [get_ports {camera_scl}] -to [get_cells {u_soc.g_camera.u_camera.u_config.u_bus.scl_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_config.u_bus.scl_sync*' in command 'get_cells u_soc.g_camera.u_camera.u_config.u_bus.scl_sync*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_config/u_bus/scl_sync[1:0]
+
+set_max_delay -datapath_only -from [get_ports {camera_sda}] -to [get_cells {u_soc.g_camera.u_camera.u_config.u_bus.sda_sync*}] 10.000
+	I: The pattern 'u_soc.g_camera.u_camera.u_config.u_bus.sda_sync*' in command 'get_cells u_soc.g_camera.u_camera.u_config.u_bus.sda_sync*' match 1 objects below:
+	I: instance u_soc/g_camera.u_camera/u_config/u_bus/sda_sync[1:0]
+
+

@@ -1,0 +1,73 @@
+##### Written on 2026/10/22 20:38:34 ###############################
+
+
+##### INFO ##################################################
+
+Current device : 
+	PG2L200H-6FBB676
+
+Top Module : 
+	tpu_synth_wrap
+
+Constraint File(s) : 
+	D:/riscv/RISCV/sim/tpu/synth/tpu.fdc
+
+##### SUMMARY ######################################################
+
+Found 0 error(s), 0 critical warning(s), 34 warning(s), out of 1 constraint(s)
+
+
+Inapplicable constraints(except overwritten constraints):
+********************************************
+
+
+Constraints with issues:
+********************************************
+
+
+Issues without commands:
+********************************************
+
+
+Unconstrained ports:
+********************************************
+
+W: ConstraintEditor-4019: Port Bus 'act_data' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'b_addr' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'b_data' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'cfg_cin' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'cfg_cout' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'cfg_h' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'cfg_shift' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'cfg_stride' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'cfg_w' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'cur_pg' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'load_pg' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'out_data' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'w_addr' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port Bus 'w_data' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'act_ready' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'act_valid' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'b_ready' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'b_valid' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'busy' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'cfg_ksize' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'cfg_pad' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'cfg_ready' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'cfg_relu' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'cfg_valid' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'clk' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'done' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'load_bank' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'out_ready' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'out_valid' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'pg_load_req' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'resetn' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'w_loaded' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'w_ready' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'w_valid' unspecified I/O constraint.
+
+Constraints with matching wildcard expressions:
+********************************************
+
+

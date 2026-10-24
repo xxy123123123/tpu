@@ -1,0 +1,25 @@
+E: Flow-0072: In command 'pds_shell', the argument '{P}_8_128' is not defined.
+H: pds_shell : Fabric Compiler Shell (Version 2022.2-SP6.4 build 146967)
+    [ -help  ]
+        Turn on to print this message
+    [ -file string ]
+        Specifying a project script file to run batch mode
+    [ -project string ]
+        Specifying a project file to run batch mode
+    [ -work_dir string ]
+        Specifying the work directory
+    [ -project_name string ]
+        Specifying the output project name
+    [ -run string ]
+        Specifying the cmd action needs to run to
+    [ -continue  ]
+        Don't exit when error occured. Valid only in script mode.
+    [ -version  ]
+        Print version
+    [ -skip_actions { string string ... } ]
+        Specify actions that do not need to be run.The optional effective actions are "report_power" and "gen_netlist".
+    [ -project_file_path string ]
+        Specifying a project file to run batch mode
+
+
+Executing : pds_shell -help successfully.

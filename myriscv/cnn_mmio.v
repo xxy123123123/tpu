@@ -1,5 +1,7 @@
 `timescale 1ns/1ps
-// digits10 ABI1. Native reads are one 256bit beat, ID4, local word addresses.
+// geomdet_int8_v1 ABI (object detection: 3 classes + cx/cy/w/h regression).
+// Native reads are one 256bit beat, ID4, local word addresses.
+// Model load: 23755 words (23632 weight bytes zero-extended + 119 bias + 4 shift).
 module cnn_mmio #(parameter integer CLK_HZ=93750000) (
     input wire clk, resetn,
     input wire req_valid, req_write,
@@ -30,7 +32,7 @@ module cnn_mmio #(parameter integer CLK_HZ=93750000) (
     reg [4:0] byte_index;
     reg [255:0] beat;
     reg [31:0] model_id, model_crc;
-    reg [12:0] load_count;
+    reg [14:0] load_count;
     reg loading, load_error, model_valid;
     wire accept=req_valid && req_ready;
     wire legal= req_size==2 && req_addr[1:0]==0 && req_addr<=32'h64;
@@ -45,11 +47,11 @@ module cnn_mmio #(parameter integer CLK_HZ=93750000) (
     wire buf_cmd=write && req_addr==32 && !busy && req_wdata<=1;
     // Conservative bound covers the largest dot (144 terms) including -128 input.
     wire bias_ok=($signed(req_wdata)>=-32'sd2145142783 && $signed(req_wdata)<=32'sd2145142783);
-    wire param_ok=load_count<6152 ? (req_wdata<=255 && req_wdata!=128) :
-                  load_count<6218 ? bias_ok : load_count<6222 && req_wdata<=31;
+    wire param_ok=load_count<15'd23632 ? (req_wdata<=255 && req_wdata!=128) :
+                  load_count<15'd23751 ? bias_ok : load_count<15'd23755 && req_wdata<=31;
     wire data_cmd=write && req_addr==16 && !busy && loading && !load_error && param_ok;
     wire commit_cmd=write && req_addr==20 && !busy && loading && !load_error &&
-        load_count==6222 && model_id!=0 && req_wdata==~model_crc;
+        load_count==15'd23755 && model_id!=0 && req_wdata==~model_crc;
     wire expired=busy && timer>=CLK_HZ*3;
     wire cancel_job=aborting || abort_cmd || expired;
     wire read_fire=rvalid && (state==RESPONSE || (state==ADDR && arready));
@@ -109,7 +111,7 @@ module cnn_mmio #(parameter integer CLK_HZ=93750000) (
                     3: rsp_rdata<=model_id;
                     4: rsp_rdata<=0;
                     5: rsp_rdata<=~model_crc;
-                    6: rsp_rdata<={19'b0,load_count};
+                    6: rsp_rdata<={17'b0,load_count};
                     7: rsp_rdata<=expected_seq;
                     8: rsp_rdata<={31'b0,expected_buf};
                     9: rsp_rdata<=done ? result_seq : 0;

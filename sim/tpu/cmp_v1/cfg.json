@@ -1,0 +1,21 @@
+{
+  "P": 16,
+  "C": 8,
+  "H": 32,
+  "W": 32,
+  "CIN": 16,
+  "COUT": 32,
+  "stride": 1,
+  "pad": 1,
+  "shift": 10,
+  "relu": 1,
+  "hout": 32,
+  "wout": 32,
+  "ncb": 2,
+  "npg": 2,
+  "nact": 12032,
+  "nexp": 2048,
+  "wdepth": 512,
+  "max_w": 256,
+  "max_cout": 256
+}

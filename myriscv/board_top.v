@@ -7,7 +7,14 @@ module board_top #(
     parameter [31:0] DDR_BASE = 32'h4000_0000,
     parameter integer CORE_CLK_HZ = 93_750_000,
     parameter integer SELFTEST_TIMEOUT_CYCLES = CORE_CLK_HZ * 5,
-    parameter integer KEY_DEBOUNCE_CYCLES = 2_500_000 // 20 ms at 125 MHz
+    parameter integer KEY_DEBOUNCE_CYCLES = 2_500_000, // 20 ms at 125 MHz
+    // ---- TPU ----
+    // 默认使能。规模由 TPU_P(输出并行度) x TPU_C(输入并行度) 决定，
+    // APM(DSP) 占用 = P*C（每个 8x8 MAC 占 1 个 GTP_APM_E2），改大前先确认
+    // 全 SoC 的 APM 预算：PG2L200H 共 740 个，CNN 也会占用一部分。
+    parameter integer ENABLE_TPU = 1,
+    parameter integer TPU_P = 16,
+    parameter integer TPU_C = 8
 ) (
     input wire camera_pclk, camera_vsync, camera_href,
     input wire [7:0] camera_data,
@@ -79,6 +86,7 @@ module board_top #(
     // DDR initialization/PLL lock inside soc_ddr3_top.
     soc_ddr3_top #(
         .ENABLE_CAMERA(1), .ENABLE_PREPROCESS(1), .ENABLE_CNN(1),
+        .ENABLE_TPU(ENABLE_TPU), .TPU_P(TPU_P), .TPU_C(TPU_C),
         .CAMERA_COLORBAR_ENABLE(0), // Live scene: PRE-ISP test pattern disabled.
         .CAMERA_DVP_TEST_ENABLE(0), // Live scene: DVP test generator disabled.
         .RESET_PC(RESET_PC), .DDR_BASE(DDR_BASE),

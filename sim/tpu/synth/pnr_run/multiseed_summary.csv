@@ -1,0 +1,37 @@
+version,2022.2-SP6.4<build 146967>
+project name,tpu_pnr.pds
+
+Multi Place Seed:
+Seed,State,Convergence,Setup(Slow),Setup(Fast),Hold(Slow),Hold(Fast),Recovery(Slow),Recovery(Fast),Removal(Slow),Removal(Fast),PBM-GP,PBM-PreGP,PBM-PostGP,LP,Total Placement Cpu Time,Detailed routing,Total Routing Cpu Time,Wire Length After Post-GP,Wire Length After LP,Wire Length After DP,Routing Arc Length,Worst Slack After GP Timing,Worst Slack After LP Timing,Worst Slack Before RP,Worst Slack Before DP,Worst Slack After DP,Worst Slack After Placement,Worst Slack After TA By Preroute,TNS After DP,TNS Before Route,Setup(Slow) Total Failing TNS,Setup(Slow) Total Failing Endpoints,Hold(Slow) Total Failing THS,Hold(Slow) Total Failing Endpoints,Power
+seed_3,OK,NA,-7.237,-2.768,0.150,0.101,NA,NA,NA,NA,0.12,NA,0.00,0.00,3.91,353.09,391.33,NA,NA,NA,198557,NA,NA,-8070,-8070,-7023,-7023,NA,-29790297,NA,-26565.556,5543,0.000,0,NA
+seed_2,OK,NA,-7.280,-2.820,0.165,0.115,NA,NA,NA,NA,0.03,NA,0.00,0.00,3.70,387.06,426.53,NA,NA,NA,198685,NA,NA,-8472,-8472,-7060,-7063,NA,-29703156,NA,-26888.921,5535,0.000,0,NA
+Pass Rate/Convergence Rate,100.00%,0.00%
+
+Synthesize:
+control_set,25
+Synthesize Performance Summary:
+slack category,Synthesize Setup WNS,Synthesize Setup TNS,Synthesize Recovery WNS,Synthesize Recovery TNS
+slack value,-7.611,-16914.812,NA,NA
+Synthesize Process Cpu Time,0h:0m:2s
+
+Device Map:
+Device Map Resource Usage Summary:
+Logic Utilization,LUT,FF,DRM,APM,Distributed RAM,HSSTHP,USCM,HCKB,RCKB
+Used,12157,3670,32,131,512,NA,1,0,0
+Available,159800,319600,415,740,39500,NA,32,120,40
+Utilization(%),8%,2%,8%,18%,2%,NA,4%,0%,0%
+Device Map Process Cpu Time,0h:0m:0s
+
+Project Configurations:
+top module,tpu_pnr_wrap
+compile," -top_module {tpu_pnr_wrap} "
+synthesize," -ads "
+device map,
+place & route," -gplace_seed 2 
+ -gplace_times 2 
+ -parallel 4 
+ -mode {performance} "
+
+Test Parameters Configurations:
+testparam,
+

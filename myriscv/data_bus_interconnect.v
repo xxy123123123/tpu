@@ -21,6 +21,7 @@ module data_bus_interconnect #(
     parameter integer ENABLE_CNN = 0,
     parameter integer ENABLE_PREPROCESS = 0,
     parameter integer ENABLE_CAMERA = 0,
+    parameter integer ENABLE_TPU  = 0,
     parameter integer ENABLE_UART  = 0,
     parameter [31:0] UART_BASE      = 32'h1000_1000, // 16-byte aligned, 16 bytes
     parameter integer DDR_WRITE_ORDER_ENABLE = 0,
@@ -46,6 +47,13 @@ module data_bus_interconnect #(
     input wire cam_req_ready, cam_rsp_valid, cam_rsp_error,
     input wire [31:0] cam_rsp_rdata,
     input wire camera_busy,
+    // ---- TPU 从设备窗口 0x1000_5000 (256B) ----
+    output wire tpu_req_valid, tpu_req_write,
+    output wire [1:0] tpu_req_size,
+    output wire [31:0] tpu_req_addr, tpu_req_wdata,
+    output wire [3:0] tpu_req_wstrb,
+    input wire tpu_req_ready, tpu_rsp_valid, tpu_rsp_error,
+    input wire [31:0] tpu_rsp_rdata,
     input wire camera_dual_mode,
     input wire [1:0] camera_cpu_owned,
     input  wire        clk,
@@ -107,14 +115,15 @@ module data_bus_interconnect #(
     input  wire        uart_rsp_error
 );
 
-    localparam [2:0] TARGET_RAM   = 3'd0;
-    localparam [2:0] TARGET_MMIO  = 3'd1;
-    localparam [2:0] TARGET_DDR   = 3'd2;
-    localparam [2:0] TARGET_ERROR = 3'd3;
-    localparam [2:0] TARGET_CNN = 3'd7;
-    localparam [2:0] TARGET_PREPROCESS = 3'd6;
-    localparam [2:0] TARGET_CAMERA = 3'd5;
-    localparam [2:0] TARGET_UART  = 3'd4;
+    localparam [3:0] TARGET_RAM   = 4'd0;
+    localparam [3:0] TARGET_MMIO  = 4'd1;
+    localparam [3:0] TARGET_DDR   = 4'd2;
+    localparam [3:0] TARGET_ERROR = 4'd3;
+    localparam [3:0] TARGET_CNN = 4'd7;
+    localparam [3:0] TARGET_PREPROCESS = 4'd6;
+    localparam [3:0] TARGET_CAMERA = 4'd5;
+    localparam [3:0] TARGET_UART  = 4'd4;
+    localparam [3:0] TARGET_TPU   = 4'd8;   // 0x1000_5000, 256B
 
     wire ram_select;
     wire mmio_select;
@@ -123,6 +132,7 @@ module data_bus_interconnect #(
     wire cam_select;
     wire pp_select;
     wire cnn_select;
+    wire tpu_select;
 
     // 037: Decode windows in parallel. Remove a priority exclusion only when
     // constant mask/base bits prove the two windows cannot overlap. Unusual
@@ -134,30 +144,39 @@ module data_bus_interconnect #(
         end
     endfunction
 
-    // raw_hits = {CNN, PP, CAM, UART, MMIO, RAM}; disabled windows never hit.
-    wire [5:0] raw_hits;
+    // raw_hits = {TPU, CNN, PP, CAM, UART, MMIO, RAM}; disabled windows never hit.
+    wire [6:0] raw_hits;
     wire ddr_hit;
-    localparam [5:0] MMIO_PRIORITY_MASK = {5'b0,
+    localparam [6:0] MMIO_PRIORITY_MASK = {6'b0,
         windows_overlap(MMIO_BASE, MMIO_ADDR_MASK, RAM_BASE, RAM_ADDR_MASK)};
-    localparam [5:0] UART_PRIORITY_MASK = {4'b0,
+    localparam [6:0] UART_PRIORITY_MASK = {5'b0,
         windows_overlap(UART_BASE, 32'hffff_fff0, MMIO_BASE, MMIO_ADDR_MASK),
         windows_overlap(UART_BASE, 32'hffff_fff0, RAM_BASE, RAM_ADDR_MASK)};
-    localparam [5:0] CAM_PRIORITY_MASK = {3'b0,
+    localparam [6:0] CAM_PRIORITY_MASK = {4'b0,
         windows_overlap(32'h1000_2000, 32'hffff_ffc0, UART_BASE, 32'hffff_fff0),
         windows_overlap(32'h1000_2000, 32'hffff_ffc0, MMIO_BASE, MMIO_ADDR_MASK),
         windows_overlap(32'h1000_2000, 32'hffff_ffc0, RAM_BASE, RAM_ADDR_MASK)};
-    localparam [5:0] PP_PRIORITY_MASK = {2'b0,
+    localparam [6:0] PP_PRIORITY_MASK = {3'b0,
         windows_overlap(32'h1000_3000, 32'hffff_ffc0, 32'h1000_2000, 32'hffff_ffc0),
         windows_overlap(32'h1000_3000, 32'hffff_ffc0, UART_BASE, 32'hffff_fff0),
         windows_overlap(32'h1000_3000, 32'hffff_ffc0, MMIO_BASE, MMIO_ADDR_MASK),
         windows_overlap(32'h1000_3000, 32'hffff_ffc0, RAM_BASE, RAM_ADDR_MASK)};
-    localparam [5:0] CNN_PRIORITY_MASK = {1'b0,
+    localparam [6:0] CNN_PRIORITY_MASK = {2'b0,
         windows_overlap(32'h1000_4000, 32'hffff_ff00, 32'h1000_3000, 32'hffff_ffc0),
         windows_overlap(32'h1000_4000, 32'hffff_ff00, 32'h1000_2000, 32'hffff_ffc0),
         windows_overlap(32'h1000_4000, 32'hffff_ff00, UART_BASE, 32'hffff_fff0),
         windows_overlap(32'h1000_4000, 32'hffff_ff00, MMIO_BASE, MMIO_ADDR_MASK),
         windows_overlap(32'h1000_4000, 32'hffff_ff00, RAM_BASE, RAM_ADDR_MASK)};
-    localparam [5:0] DDR_PRIORITY_MASK = {
+    // TPU 排在最后（最低优先级）：与任何更高优先级窗口重叠时都让位。
+    localparam [6:0] TPU_PRIORITY_MASK = {1'b0,
+        windows_overlap(32'h1000_5000, 32'hffff_ff00, 32'h1000_4000, 32'hffff_ff00),
+        windows_overlap(32'h1000_5000, 32'hffff_ff00, 32'h1000_3000, 32'hffff_ffc0),
+        windows_overlap(32'h1000_5000, 32'hffff_ff00, 32'h1000_2000, 32'hffff_ffc0),
+        windows_overlap(32'h1000_5000, 32'hffff_ff00, UART_BASE, 32'hffff_fff0),
+        windows_overlap(32'h1000_5000, 32'hffff_ff00, MMIO_BASE, MMIO_ADDR_MASK),
+        windows_overlap(32'h1000_5000, 32'hffff_ff00, RAM_BASE, RAM_ADDR_MASK)};
+    localparam [6:0] DDR_PRIORITY_MASK = {
+        windows_overlap(DDR_BASE, DDR_ADDR_MASK, 32'h1000_5000, 32'hffff_ff00),
         windows_overlap(DDR_BASE, DDR_ADDR_MASK, 32'h1000_4000, 32'hffff_ff00),
         windows_overlap(DDR_BASE, DDR_ADDR_MASK, 32'h1000_3000, 32'hffff_ffc0),
         windows_overlap(DDR_BASE, DDR_ADDR_MASK, 32'h1000_2000, 32'hffff_ffc0),
@@ -176,7 +195,7 @@ module data_bus_interconnect #(
     wire issue_allowed;
     wire response_turnover;
     reg  pending;
-    reg [2:0] response_target;
+    reg [3:0] response_target;
 
     assign raw_hits[0] = ((m_req_addr & RAM_ADDR_MASK) == (RAM_BASE & RAM_ADDR_MASK));
     assign raw_hits[1] = ((m_req_addr & MMIO_ADDR_MASK) == (MMIO_BASE & MMIO_ADDR_MASK));
@@ -184,6 +203,7 @@ module data_bus_interconnect #(
     assign raw_hits[3] = (ENABLE_CAMERA != 0) && (m_req_addr[31:6] == (32'h10002000 >> 6));
     assign raw_hits[4] = (ENABLE_PREPROCESS != 0) && (m_req_addr[31:6] == (32'h10003000 >> 6));
     assign raw_hits[5] = (ENABLE_CNN != 0) && (m_req_addr[31:8] == 24'h100040);
+    assign raw_hits[6] = (ENABLE_TPU != 0) && (m_req_addr[31:8] == 24'h100050);
     assign ddr_hit = (ENABLE_DDR != 0) &&
                      ((m_req_addr & DDR_ADDR_MASK) == (DDR_BASE & DDR_ADDR_MASK));
     assign ram_select = raw_hits[0];
@@ -192,6 +212,7 @@ module data_bus_interconnect #(
     assign cam_select = raw_hits[3] && !(|(raw_hits & CAM_PRIORITY_MASK));
     assign pp_select = raw_hits[4] && !(|(raw_hits & PP_PRIORITY_MASK));
     assign cnn_select = raw_hits[5] && !(|(raw_hits & CNN_PRIORITY_MASK));
+    assign tpu_select = raw_hits[6] && !(|(raw_hits & TPU_PRIORITY_MASK));
     assign ddr_select = ddr_hit && !(|(raw_hits & DDR_PRIORITY_MASK)) &&
                         !frame_blocked && !pp_blocked;
 
@@ -215,6 +236,7 @@ module data_bus_interconnect #(
                            (cnn_select && !cnn_req_ready) ||
                            (pp_select && !pp_req_ready) ||
                            (cam_select && !cam_req_ready) ||
+                           (tpu_select && !tpu_req_ready) ||
                            (uart_select && !uart_req_ready) ||
                            (ddr_select && !ddr_req_ready));
     assign req_fire = m_req_valid && m_req_ready;
@@ -265,6 +287,12 @@ module data_bus_interconnect #(
     assign cam_req_addr=m_req_addr-32'h10002000;
     assign cam_req_wdata=m_req_wdata;
     assign cam_req_wstrb=m_req_wstrb;
+    assign tpu_req_valid=issue_allowed && m_req_valid && tpu_select;
+    assign tpu_req_write=m_req_write;
+    assign tpu_req_size=m_req_size;
+    assign tpu_req_addr=m_req_addr-32'h10005000;
+    assign tpu_req_wdata=m_req_wdata;
+    assign tpu_req_wstrb=m_req_wstrb;
 
     // 未映射地址也先完成请求握手，再在下一拍返回 error，避免 CPU 死等。
     assign m_rsp_valid = pending &&
@@ -275,6 +303,7 @@ module data_bus_interconnect #(
                           (response_target == TARGET_PREPROCESS) ? pp_rsp_valid :
                           (response_target == TARGET_CAMERA) ? cam_rsp_valid :
                           (response_target == TARGET_UART) ? uart_rsp_valid :
+                          (response_target == TARGET_TPU)  ? tpu_rsp_valid  :
                                                               1'b1);
     assign m_rsp_rdata = (response_target == TARGET_RAM)  ? ram_rsp_rdata  :
                          (response_target == TARGET_MMIO) ? mmio_rsp_rdata :
@@ -283,6 +312,7 @@ module data_bus_interconnect #(
                          (response_target == TARGET_PREPROCESS) ? pp_rsp_rdata :
                          (response_target == TARGET_CAMERA) ? cam_rsp_rdata :
                          (response_target == TARGET_UART) ? uart_rsp_rdata :
+                         (response_target == TARGET_TPU)  ? tpu_rsp_rdata  :
                                                            32'b0;
     assign m_rsp_error = m_rsp_valid &&
                          ((response_target == TARGET_RAM)  ? ram_rsp_error  :
@@ -292,6 +322,7 @@ module data_bus_interconnect #(
                           (response_target == TARGET_PREPROCESS) ? pp_rsp_error :
                           (response_target == TARGET_CAMERA) ? cam_rsp_error :
                           (response_target == TARGET_UART) ? uart_rsp_error :
+                          (response_target == TARGET_TPU)  ? tpu_rsp_error  :
                                                             1'b1);
 
     always @(posedge clk) begin
@@ -319,6 +350,8 @@ module data_bus_interconnect #(
                     response_target <= TARGET_DDR;
                 else if (uart_select)
                     response_target <= TARGET_UART;
+                else if (tpu_select)
+                    response_target <= TARGET_TPU;
                 else
                     response_target <= TARGET_ERROR;
             end

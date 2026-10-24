@@ -7,6 +7,17 @@ module soc_ddr3_top #(
     parameter integer ENABLE_CNN = 0,
     parameter integer ENABLE_PREPROCESS = 0,
     parameter integer ENABLE_CAMERA = 0,
+    parameter integer ENABLE_TPU = 0,
+    parameter integer TPU_P = 16,          // TPU 输出通道并行度
+    parameter integer TPU_C = 8,           // TPU 输入通道并行度
+    parameter integer TPU_WDEPTH = 512,    // 权重 bank 深度（2 的幂）
+    parameter integer TPU_MAX_W = 256,
+    parameter integer TPU_NCBMAX = 8,
+    parameter integer TPU_MAX_COUT = 256,
+    parameter integer TPU_NBUF = 5,
+    // TPU_WT_PORT=1 时给权重单独开一条 AXI 读口（多一级读仲裁），实测
+    // 比共用口快 14%（570 -> 490 拍），故默认开。见 tpu_dma 的 WT_SHARED_PORT。
+    parameter integer TPU_WT_PORT = 1,
     parameter integer CAMERA_COLORBAR_ENABLE = 0,
     parameter integer CAMERA_DVP_TEST_ENABLE = 0,
     parameter [31:0] RESET_PC = 32'h0000_0000,
@@ -78,6 +89,36 @@ module soc_ddr3_top #(
 
     localparam PREPROCESS_ACTIVE=(ENABLE_PREPROCESS!=0 && ENABLE_CAMERA!=0);
     localparam CNN_ACTIVE=(ENABLE_CNN!=0 && PREPROCESS_ACTIVE);
+    // TPU 不依赖 camera/preprocess 链路，可独立使能。
+    localparam TPU_ACTIVE=(ENABLE_TPU!=0);
+    wire tpu_req_valid, tpu_req_write, tpu_req_ready, tpu_rsp_valid, tpu_rsp_error;
+    wire [1:0] tpu_req_size;
+    wire [31:0] tpu_req_addr, tpu_req_wdata, tpu_rsp_rdata;
+    wire [3:0] tpu_req_wstrb;
+    wire tpu_busy, tpu_done, tpu_pg_req;
+    // ---- TPU DMA 的 DDR 直通口 ----
+    wire [27:0] tpu_araddr, tpu_awaddr;
+    wire tpu_arvalid, tpu_arready, tpu_rvalid;
+    wire tpu_awvalid, tpu_awready, tpu_wready;
+    wire [255:0] tpu_wdata;
+    wire tpu_read_error;
+    // TPU 权重专用读口：与激活口并行，避免装载权重期间把激活饿死
+    // （引擎 fill_act = S_WLOAD||S_COMP，装载与填行缓冲本就该同时进行）。
+    wire [27:0] tpu_waraddr;
+    wire tpu_warvalid, tpu_warready, tpu_wrvalid;
+    wire tpu_act_read_error, tpu_wt_read_error;
+    // 两级读仲裁的中间信号：上游 -> [arb_act: 激活] -> [arb_wt: 权重] -> axi
+    wire [27:0] act2_araddr;
+    wire [3:0]  act2_arlen, act2_arid;
+    wire act2_arap, act2_arvalid, act2_arready, act2_rvalid;
+    // TPU 挂在仲裁链末端：读 cnn -> tpu_in -> [tpu arb] -> axi；
+    // 写 (cpu/cam/pp) -> out -> [tpu arb] -> axi。中间名用于未使能时直通。
+    wire [27:0] tpu_in_araddr, out_awaddr;
+    wire [3:0]  tpu_in_arlen, tpu_in_arid, out_awlen, out_awuser_id;
+    wire tpu_in_arap, tpu_in_arvalid, tpu_in_arready, tpu_in_rvalid;
+    wire out_awap, out_awvalid, out_awready, out_wready;
+    wire [255:0] out_wdata;
+    wire [31:0] out_wstrb;
     wire cnn_req_valid, cnn_req_write, cnn_req_ready, cnn_rsp_valid, cnn_rsp_error;
     wire [1:0] cnn_req_size;
     wire [31:0] cnn_req_addr, cnn_req_wdata, cnn_rsp_rdata;
@@ -183,8 +224,8 @@ module soc_ddr3_top #(
             .cpu_wdata(shared_wdata), .cpu_wstrb(shared_wstrb), .cpu_awready(shared_awready), .cpu_wready(shared_wready),
             .cam_awaddr(pp_awaddr), .cam_awvalid(pp_awvalid), .cam_wdata(pp_wdata),
             .cam_awready(pp_awready), .cam_wready(pp_wready),
-            .awaddr(axi_awaddr), .awlen(axi_awlen), .awid(axi_awuser_id), .awap(axi_awuser_ap),
-            .awvalid(axi_awvalid), .awready(axi_awready), .wdata(axi_wdata), .wstrb(axi_wstrb), .wready(axi_wready), .busy()
+            .awaddr(out_awaddr), .awlen(out_awlen), .awid(out_awuser_id), .awap(out_awap),
+            .awvalid(out_awvalid), .awready(out_awready), .wdata(out_wdata), .wstrb(out_wstrb), .wready(out_wready), .busy()
         );
         preprocess_ddr_read_arbiter u_read_arbiter (
             .clk(core_clk), .resetn(soc_resetn),
@@ -201,10 +242,10 @@ module soc_ddr3_top #(
         assign pp_result_seq=0; assign pp_result_buf=0;
         assign pp_awaddr=0; assign pp_awvalid=0; assign pp_wdata=0; assign pp_awready=0; assign pp_wready=0;
         assign pp_araddr=0; assign pp_arvalid=0; assign pp_arready=0; assign pp_rvalid=0;
-        assign axi_awaddr=shared_awaddr; assign axi_awlen=shared_awlen; assign axi_awuser_id=shared_awuser_id;
-        assign axi_awuser_ap=shared_awuser_ap; assign axi_awvalid=shared_awvalid;
-        assign axi_wdata=shared_wdata; assign axi_wstrb=shared_wstrb;
-        assign shared_awready=axi_awready; assign shared_wready=axi_wready;
+        assign out_awaddr=shared_awaddr; assign out_awlen=shared_awlen; assign out_awuser_id=shared_awuser_id;
+        assign out_awuser_ap=shared_awuser_ap; assign out_awvalid=shared_awvalid;
+        assign out_wdata=shared_wdata; assign out_wstrb=shared_wstrb;
+        assign shared_awready=out_awready; assign shared_wready=out_wready;
         assign group_araddr=cpu_araddr; assign group_arlen=cpu_arlen; assign group_arid=cpu_arid;
         assign group_arap=cpu_arap; assign group_arvalid=cpu_arvalid;
         assign cpu_arready=group_arready; assign cpu_rvalid=group_rvalid;
@@ -227,17 +268,101 @@ module soc_ddr3_top #(
             .cpu_addr(group_araddr), .cpu_len(group_arlen), .cpu_id(group_arid), .cpu_ap(group_arap),
             .cpu_valid(group_arvalid), .cpu_ready(group_arready), .cpu_rvalid(group_rvalid),
             .pp_addr(cnn_araddr), .pp_valid(cnn_arvalid), .pp_ready(cnn_arready), .pp_rvalid(cnn_rvalid),
-            .araddr(axi_araddr), .arlen(axi_arlen), .arid(axi_aruser_id), .arap(axi_aruser_ap),
-            .arvalid(axi_arvalid), .arready(axi_arready), .rvalid(axi_rvalid), .rlast(axi_rlast), .rid(axi_rid),
+            .araddr(tpu_in_araddr), .arlen(tpu_in_arlen), .arid(tpu_in_arid), .arap(tpu_in_arap),
+            .arvalid(tpu_in_arvalid), .arready(tpu_in_arready), .rvalid(tpu_in_rvalid), .rlast(axi_rlast), .rid(axi_rid),
             .protocol_error(outer_read_error)
         );
     end else begin : g_no_cnn
         assign cnn_req_ready=0; assign cnn_rsp_valid=0; assign cnn_rsp_error=0; assign cnn_rsp_rdata=0;
         assign cnn_hold=0; assign cnn_araddr=0; assign cnn_arvalid=0; assign cnn_arready=0; assign cnn_rvalid=0;
         assign outer_read_error=0;
-        assign axi_araddr=group_araddr; assign axi_arlen=group_arlen; assign axi_aruser_id=group_arid;
-        assign axi_aruser_ap=group_arap; assign axi_arvalid=group_arvalid;
-        assign group_arready=axi_arready; assign group_rvalid=axi_rvalid;
+        assign tpu_in_araddr=group_araddr; assign tpu_in_arlen=group_arlen; assign tpu_in_arid=group_arid;
+        assign tpu_in_arap=group_arap; assign tpu_in_arvalid=group_arvalid;
+        assign group_arready=tpu_in_arready; assign group_rvalid=tpu_in_rvalid;
+    end endgenerate
+
+    generate if(TPU_ACTIVE) begin : g_tpu
+        tpu_mmio #(
+            .P(TPU_P), .C(TPU_C), .MAX_W(TPU_MAX_W), .NCBMAX(TPU_NCBMAX),
+            .WDEPTH(TPU_WDEPTH), .MAX_COUT(TPU_MAX_COUT), .NBUF(TPU_NBUF),
+            .WT_SHARED_PORT(TPU_WT_PORT == 0), .CLK_HZ(CORE_CLK_HZ)
+        ) u_tpu_mmio (
+            .clk(core_clk), .resetn(soc_resetn),
+            .req_valid(tpu_req_valid), .req_write(tpu_req_write), .req_size(tpu_req_size),
+            .req_addr(tpu_req_addr), .req_wdata(tpu_req_wdata), .req_wstrb(tpu_req_wstrb),
+            .req_ready(tpu_req_ready), .rsp_valid(tpu_rsp_valid), .rsp_error(tpu_rsp_error),
+            .rsp_rdata(tpu_rsp_rdata),
+            .araddr(tpu_araddr), .awaddr(tpu_awaddr),
+            .arvalid(tpu_arvalid), .awvalid(tpu_awvalid), .wdata(tpu_wdata),
+            .arready(tpu_arready), .rvalid(tpu_rvalid), .rlast(axi_rlast),
+            .awready(tpu_awready), .wready(tpu_wready),
+            .arid(axi_rid), .rdata(axi_rdata),
+            .read_protocol_error(tpu_read_error),
+            .wt_araddr(tpu_waraddr), .wt_arvalid(tpu_warvalid), .wt_arready(tpu_warready),
+            .wt_rvalid(tpu_wrvalid), .wt_rlast(axi_rlast), .wt_rid(axi_rid),
+            .wt_rdata(axi_rdata), .wt_read_protocol_error(tpu_wt_read_error),
+            .tpu_busy(tpu_busy), .tpu_done(tpu_done), .tpu_pg_req(tpu_pg_req)
+        );
+        // 读链末端做成两级：上游 -> [arb_act: TPU 激活] -> [arb_wt: TPU 权重] -> axi。
+        // 仲裁器是 round-robin 且单 beat 粒度，所以两级串联等价于三方轮流，
+        // 激活与权重交错推进，任何一方都不会被完全饿死。
+        preprocess_ddr_read_arbiter #(.PP_ID(4'd5)) u_tpu_act_read_arbiter (
+            .clk(core_clk), .resetn(soc_resetn),
+            .cpu_addr(tpu_in_araddr), .cpu_len(tpu_in_arlen), .cpu_id(tpu_in_arid), .cpu_ap(tpu_in_arap),
+            .cpu_valid(tpu_in_arvalid), .cpu_ready(tpu_in_arready), .cpu_rvalid(tpu_in_rvalid),
+            .pp_addr(tpu_araddr), .pp_valid(tpu_arvalid), .pp_ready(tpu_arready), .pp_rvalid(tpu_rvalid),
+            .araddr(act2_araddr), .arlen(act2_arlen), .arid(act2_arid), .arap(act2_arap),
+            .arvalid(act2_arvalid), .arready(act2_arready), .rvalid(act2_rvalid), .rlast(axi_rlast), .rid(axi_rid),
+            .protocol_error(tpu_act_read_error)
+        );
+        // 注意：这里**不能再写 generate 关键字**——已经在外层 generate 块内，
+        // 嵌套 generate 块只能用 if/else begin/end（PDS 报 Verilog-4005）。
+        if (TPU_WT_PORT != 0) begin : g_wt_port
+            preprocess_ddr_read_arbiter #(.PP_ID(4'd6)) u_tpu_wt_read_arbiter (
+                .clk(core_clk), .resetn(soc_resetn),
+                .cpu_addr(act2_araddr), .cpu_len(act2_arlen), .cpu_id(act2_arid), .cpu_ap(act2_arap),
+                .cpu_valid(act2_arvalid), .cpu_ready(act2_arready), .cpu_rvalid(act2_rvalid),
+                .pp_addr(tpu_waraddr), .pp_valid(tpu_warvalid), .pp_ready(tpu_warready), .pp_rvalid(tpu_wrvalid),
+                .araddr(axi_araddr), .arlen(axi_arlen), .arid(axi_aruser_id), .arap(axi_aruser_ap),
+                .arvalid(axi_arvalid), .arready(axi_arready), .rvalid(axi_rvalid), .rlast(axi_rlast), .rid(axi_rid),
+                .protocol_error(tpu_wt_read_error)
+            );
+        end else begin : g_no_wt_port
+            assign axi_araddr=act2_araddr; assign axi_arlen=act2_arlen;
+            assign axi_aruser_id=act2_arid; assign axi_aruser_ap=act2_arap;
+            assign axi_arvalid=act2_arvalid;
+            assign act2_arready=axi_arready; assign act2_rvalid=axi_rvalid;
+            assign tpu_wt_read_error=0;
+        end
+        assign tpu_read_error = tpu_act_read_error | tpu_wt_read_error;
+        // 写链末端：TPU 的输出回写（cam 侧固定单 beat 32 字节）
+        camera_ddr_write_arbiter #(.CAM_AW_ID(4'd5)) u_tpu_write_arbiter (
+            .clk(core_clk), .resetn(soc_resetn),
+            .cpu_awaddr(out_awaddr), .cpu_awlen(out_awlen), .cpu_awid(out_awuser_id),
+            .cpu_awap(out_awap), .cpu_awvalid(out_awvalid),
+            .cpu_wdata(out_wdata), .cpu_wstrb(out_wstrb),
+            .cpu_awready(out_awready), .cpu_wready(out_wready),
+            .cam_awaddr(tpu_awaddr), .cam_awvalid(tpu_awvalid), .cam_wdata(tpu_wdata),
+            .cam_awready(tpu_awready), .cam_wready(tpu_wready),
+            .awaddr(axi_awaddr), .awlen(axi_awlen), .awid(axi_awuser_id), .awap(axi_awuser_ap),
+            .awvalid(axi_awvalid), .awready(axi_awready), .wdata(axi_wdata), .wstrb(axi_wstrb),
+            .wready(axi_wready), .busy()
+        );
+    end else begin : g_no_tpu
+        assign tpu_req_ready=0; assign tpu_rsp_valid=0; assign tpu_rsp_error=0;
+        assign tpu_rsp_rdata=0;
+        assign tpu_busy=0; assign tpu_done=0; assign tpu_pg_req=0;
+        assign tpu_araddr=0; assign tpu_arvalid=0; assign tpu_awaddr=0;
+        assign tpu_awvalid=0; assign tpu_wdata=0; assign tpu_read_error=0;
+        assign tpu_waraddr=0; assign tpu_warvalid=0;
+        assign tpu_act_read_error=0; assign tpu_wt_read_error=0;
+        assign axi_araddr=tpu_in_araddr; assign axi_arlen=tpu_in_arlen; assign axi_aruser_id=tpu_in_arid;
+        assign axi_aruser_ap=tpu_in_arap; assign axi_arvalid=tpu_in_arvalid;
+        assign tpu_in_arready=axi_arready; assign tpu_in_rvalid=axi_rvalid;
+        assign axi_awaddr=out_awaddr; assign axi_awlen=out_awlen; assign axi_awuser_id=out_awuser_id;
+        assign axi_awuser_ap=out_awap; assign axi_awvalid=out_awvalid;
+        assign axi_wdata=out_wdata; assign axi_wstrb=out_wstrb;
+        assign out_awready=axi_awready; assign out_wready=axi_wready;
     end endgenerate
 
     // CPU 与桥均运行于 DDR IP 的 core_clk；DDR 校准完成后再同步释放复位。
@@ -264,6 +389,7 @@ module soc_ddr3_top #(
         .ENABLE_CNN(CNN_ACTIVE),
         .ENABLE_PREPROCESS(PREPROCESS_ACTIVE),
         .ENABLE_CAMERA(ENABLE_CAMERA),
+        .ENABLE_TPU(TPU_ACTIVE),
         .RESET_PC(RESET_PC),
         .ENABLE_DDR(1),
         .DDR_BASE(DDR_BASE),
@@ -288,6 +414,11 @@ module soc_ddr3_top #(
         .cam_req_ready(cam_req_ready), .cam_rsp_valid(cam_rsp_valid),
         .cam_rsp_error(cam_rsp_error), .cam_rsp_rdata(cam_rsp_rdata),
         .camera_busy(camera_busy),
+        .tpu_req_valid(tpu_req_valid), .tpu_req_write(tpu_req_write),
+        .tpu_req_size(tpu_req_size), .tpu_req_addr(tpu_req_addr),
+        .tpu_req_wdata(tpu_req_wdata), .tpu_req_wstrb(tpu_req_wstrb),
+        .tpu_req_ready(tpu_req_ready), .tpu_rsp_valid(tpu_rsp_valid),
+        .tpu_rsp_error(tpu_rsp_error), .tpu_rsp_rdata(tpu_rsp_rdata),
         .camera_dual_mode(camera_dual_mode), .camera_cpu_owned(camera_cpu_owned),
         .clk(core_clk),
         .resetn(soc_resetn),

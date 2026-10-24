@@ -1,0 +1,42 @@
+##### Written on 2026/10/23 19:07:58 ###############################
+
+
+##### INFO ##################################################
+
+Current device : 
+	PG2L200H-6FBB676
+
+Top Module : 
+	tpu_pnr_wrap_v15
+
+Constraint File(s) : 
+	D:/riscv/RISCV/sim/tpu/synth/tpu_pnr.fdc
+
+##### SUMMARY ######################################################
+
+Found 0 error(s), 0 critical warning(s), 3 warning(s), out of 1 constraint(s)
+
+
+Inapplicable constraints(except overwritten constraints):
+********************************************
+
+
+Constraints with issues:
+********************************************
+
+
+Issues without commands:
+********************************************
+
+
+Unconstrained ports:
+********************************************
+
+W: ConstraintEditor-4019: Port Bus 'probe' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'clk' unspecified I/O constraint.
+W: ConstraintEditor-4019: Port 'resetn' unspecified I/O constraint.
+
+Constraints with matching wildcard expressions:
+********************************************
+
+
