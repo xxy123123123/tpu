@@ -198,8 +198,9 @@ module tpu_mmio #(
 
     // ---------------- MMIO 译码 ----------------
     wire [5:0] rid = req_addr[7:2];
+    // wstrb 只约束写：真实 CPU 的读不驱动 wstrb（单元 TB 恒给 4'hf 掩盖了这点）
     wire legal = (req_size == 2'd2) && (req_addr[1:0] == 2'b0) &&
-                 (req_addr <= 32'h84) && (req_wstrb == 4'hf);
+                 (req_addr <= 32'h84) && (!req_write || (req_wstrb == 4'hf));
     wire accept = req_valid && req_ready;
     wire write  = accept && req_write && legal;
 
