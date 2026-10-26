@@ -184,6 +184,34 @@ module tpu_conv_engine #(
     wire [16:0] ext_h = {1'b0, cfg_h} + (cfg_pad ? 17'd2 : 17'd0) - khw;
     wire [16:0] ext_w = {1'b0, cfg_w} + (cfg_pad ? 17'd2 : 17'd0) - khw;
 
+    // ---------------- 配置合法性检查（防非法参数死锁）----------------
+    // cin/C 与 cout/P 必须整除（整数除法，不整除会丢通道甚至死锁：cin<C 时
+    // ncb_r=0，last_term_i = (cb==ncb_r-1) 变成 cb==16'hffff 永不成立）。
+    // ext_h/ext_w 必须 >= 0（否则 17 位有符号下溢成巨大值，引擎无限计算）。
+    // 非法配置直接进 S_DONE 空转，不进入计算，避免挂死整条流水。
+    wire cin_bad  = (cfg_cin < C) || ((cfg_cin % C) != 0);
+    // cout > MAX_COUT 时偏置表 biasw[BDEPTH] 写越界（b_addr 只有 8 bit），必须拦下
+    wire cout_bad = (cfg_cout < P) || ((cfg_cout % P) != 0) || (cfg_cout > MAX_COUT);
+    wire h_bad    = $signed(ext_h) < 17'sd0;
+    wire w_bad    = $signed(ext_w) < 17'sd0;
+    wire cfg_bad  = cin_bad || cout_bad || h_bad || w_bad;
+
+    // synthesis translate_off
+    // 仿真期显式报错，方便定位是哪个参数不对
+    always @(posedge clk) begin
+        if (cfg_valid && cfg_ready) begin
+            if (cin_bad)
+                $display("[tpu_conv_engine] ERROR: cin=%0d 必须为 C=%0d 的正整数倍", cfg_cin, C);
+            if (cout_bad)
+                $display("[tpu_conv_engine] ERROR: cout=%0d 必须为 P=%0d 的正整数倍且 <=MAX_COUT=%0d", cfg_cout, P, MAX_COUT);
+            if (h_bad)
+                $display("[tpu_conv_engine] ERROR: h=%0d 太小（pad/ksize 下溢）", cfg_h);
+            if (w_bad)
+                $display("[tpu_conv_engine] ERROR: w=%0d 太小（pad/ksize 下溢）", cfg_w);
+        end
+    end
+    // synthesis translate_on
+
     // ---------------- 权重预取请求 ----------------
     wire [15:0] next_pg_w = (pg >= npg_r - 16'd1) ? 16'd0 : (pg + 16'd1);
     wire        has_next  = (state != S_IDLE) && (state != S_DONE) && (pg < npg_r - 16'd1);
@@ -477,7 +505,8 @@ module tpu_conv_engine #(
                     oy       <= 0;
                     ctrl_done <= 0;
                     wbank_ready <= 2'b00;
-                    state    <= S_WLOAD;
+                    // 非法配置不进计算（否则 cin<C 时 ncb_r=0 导致死锁）
+                    state    <= cfg_bad ? S_DONE : S_WLOAD;
                 end
 
                 // 等当前组的权重就位；就位后清标记并快照 bias

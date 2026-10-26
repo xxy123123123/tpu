@@ -185,6 +185,7 @@ __pycache__/
 !/doc/assets/mermaid-diagram.png
 !/doc/board/*.md
 !/doc/board/主工程新位流六轮实板验收_2026-10-10.md
+!/doc/tpu/**
 !/doc/project/check_doc_links.py
 !/doc/project/文档目录整理_2026-10-10.md
 !/doc/assets/SoC结构图_UART阶段3_2026-10-05.png
@@ -205,3 +206,14 @@ __pycache__/
 # /impl.tcl
 # /ipcore/data_ram/ram_test.dat.bak
 # /sim/board_boot_fix_20261003/before/
+
+# TPU/PDS 综合日志与临时备份（不发布）。
+*.flow.log
+flow.log
+out*.log
+console.log
+resume_pnr_console.log
+run.log
+multiseed_summary.csv
+/.bak_*/
+
