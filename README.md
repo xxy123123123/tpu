@@ -37,8 +37,12 @@ tpu/
 ├── sim/                             ← 仿真与综合复现
 │   ├── tpu/                         ← 引擎级回归（23 用例）+ 各模块 TB
 │   │   ├── run_regress.py  gen_stim.py  run_mmio_check.py
-│   │   └── tb_tpu_conv.v  tb_tpu_dma.v  tb_tpu_layout.v  tb_tpu_mmio.v
-│   │       tb_tpu_perf.v  tb_tpu_wdma.v  tb_bus_tpu.v
+│   │   ├── tb_tpu_conv.v  tb_tpu_dma.v  tb_tpu_layout.v  tb_tpu_mmio.v
+│   │   │   tb_tpu_perf.v  tb_tpu_wdma.v  tb_bus_tpu.v
+│   │   └── synth/                   ← 引擎单独综合/PnR 评估（PDS）
+│   │       ├── run_synth2.tcl  impl.tcl  run_pnr_v15.tcl
+│   │       ├── tpu_synth_wrap.v  tpu_pnr_wrap_v15.v  tpu_conv_engine_pnr_snap.v
+│   │       └── tpu.fdc  tpu_pnr.fdc
 │   ├── tpu_soc/                     ← SoC 级协同仿真（真 CPU + DDR）
 │   │   ├── run.py  tb_tpu_soc.v
 │   └── soc/synth/                   ← 板级综合工程（PDS 2022.2-SP6.4）
@@ -72,6 +76,20 @@ python -X utf8 sim/tpu/run_regress.py [--quick] [--keep]
 
 ```bash
 python sim/tpu_soc/run.py
+```
+
+> ⚠️ 协同仿真需要 CPU 核、总线、UART、DDR 桥等其余 SoC 模块（`run.py` 编译清单含
+> `myriscv/` 下 19 个模块 + `sim/uart_echo/tb/echo_bram.v` + `sim/br_ex_redirect/mul_behavioral.v`），
+> 本仓库仅含 TPU 部分，需在完整主仓库中运行；`tests/tpu_conv/build.py` 依赖
+> `xpack-riscv-none-elf-gcc-15.2.0-1` 工具链。
+
+**引擎单独综合评估**（PDS，可选，用于查引擎频率/资源）：
+
+```bash
+# 综合（P32C16 配置示例）
+pds_shell -file sim/tpu/synth/run_synth2.tcl
+# 布局布线（v15 wrapper）
+pds_shell -file sim/tpu/synth/run_pnr_v15.tcl
 ```
 
 **综合上板**：紫光同创 PDS 2022.2-SP6.4 打开 `sim/soc/synth/soc_tpu_run/soc_tpu.pds`（top = board_top，ENABLE_TPU=1），或运行 `run_soc_tpu.tcl` 一键综合。
